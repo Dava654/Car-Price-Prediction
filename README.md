@@ -292,12 +292,6 @@ pada rentang 2022 -- 2023 dan sesuai topik:
         harus tepat 1. Nilai ini dihitung pada dataset yang berbeda,
         sehingga tidak bisa langsung dibandingkan dengan hasil di atas.
 
-> **Status akreditasi:** menurut profil SINTA
-> (https://sinta.kemdiktisaintek.go.id/journals/profile/2162), Jurnal Ilmiah
-> KOMPUTASI saat ini berperingkat **SINTA 4**, bukan SINTA 3. Jika tugas
-> mensyaratkan SINTA 3 secara ketat, referensi ini perlu diganti dengan
-> jurnal SINTA 3 yang terbit 2022--2023.
-
 Referensi pendukung (ditemukan, tetapi **di luar rentang tahun 2022--2023**,
 jangan dipakai sebagai referensi utama sesuai syarat):
 
