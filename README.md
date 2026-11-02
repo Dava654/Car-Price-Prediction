@@ -1,8 +1,10 @@
 # Penjelasan Kode & Tujuan Proyek (Car Dataset)
 
-Dokumen ini berisi penjelasan alur kerja, tujuan, dan rincian kode yang
-digunakan dalam pengolahan data serta pemodelan Machine Learning pada
-dataset harga mobil (`car_dataset_2000_rows.csv`).
+Halo, saya Mochamad Dava Dinata, mahasiswa Teknik Informatika Universitas Pamulang. Selamat datang di repositori tugas praktikum machine learning saya! 👋
+
+Di repositori ini saya membangun model untuk memprediksi harga mobil (`price`) berdasarkan karakteristik kendaraannya, seperti merek, model, tahun, ukuran mesin, jarak tempuh, jenis bahan bakar, transmisi, tipe mobil, dan sistem penggerak. Seluruh prosesnya saya kerjakan dari nol sampai model jadi: mulai dari memuat dan memeriksa data, membersihkan, menganalisis, membagi data, melatih model, sampai mengevaluasi hasilnya pada dataset `car_dataset_2000_rows.csv`.
+
+README ini saya tulis supaya siapa pun yang membuka repositori ini, bahkan yang belum pernah belajar machine learning, bisa paham apa yang saya kerjakan dan kenapa setiap langkahnya perlu dilakukan.
 
 ------------------------------------------------------------------------
 
@@ -160,39 +162,49 @@ penggerak.
 
 ------------------------------------------------------------------------
 
-### 11. Pelatihan Model (*Modeling*)
+### 11. Penentuan Algoritma Regresi dan Pelatihan Model (*Modeling*)
 
--   **Fungsi Kode:** `LinearRegression()`, `DecisionTreeRegressor()`,
-    `RandomForestRegressor()`, `GradientBoostingRegressor()`
--   **Penjelasan:**
-    -   **Linear Regression:** Memprediksi harga dengan memodelkan
-        hubungan linear antara fitur dan target.
-    -   **Decision Tree Regressor:** Membuat aturan berbentuk pohon
-        untuk memperkirakan harga.
-    -   **Random Forest Regressor:** Menggabungkan prediksi dari banyak
-        pohon keputusan.
-    -   **Gradient Boosting Regressor:** Membangun model secara bertahap
-        untuk memperbaiki kesalahan prediksi sebelumnya.
-    -   Keempat model dilatih menggunakan data latih untuk kemudian
-        dibandingkan performanya.
+-   **Fungsi Kode:** `LinearRegression()`, `DecisionTreeRegressor(max_depth=6)`,
+    `RandomForestRegressor(n_estimators=200)`, `GradientBoostingRegressor()`
+-   **Mengapa regresi?** Target `price` bertipe numerik kontinu (Rp 801.285
+    -- Rp 7.997.116), jadi masalahnya regresi, bukan klasifikasi.
+-   **Mengapa keempat algoritma ini?**
+
+| Algoritma | Peran | Alasan pemilihan |
+|---|---|---|
+| Linear Regression | *Baseline* | Sederhana, mudah diinterpretasi; dipakai pada data hasil standardisasi |
+| Decision Tree Regressor | Model non-linear dasar | Menangkap aturan bercabang antar fitur; `max_depth=6` membatasi overfitting |
+| Random Forest Regressor | Ensemble *bagging* | Rata-rata banyak pohon, lebih stabil dan tahan noise |
+| Gradient Boosting Regressor | Ensemble *boosting* | Memperbaiki kesalahan secara bertahap; pada referensi sering jadi yang terbaik |
+
+-   **Catatan:** model tidak dipilih berdasarkan "algoritma mana yang pasti
+    menghasilkan R² mendekati 1". Algoritma hanya **kandidat**; model terbaik
+    ditentukan dari hasil evaluasi pada **data uji** (bagian 12 dan 14).
+-   Linear Regression memakai data standardisasi; tiga model lainnya memakai
+    data asli (model berbasis pohon tidak memerlukan scaling).
 
 ------------------------------------------------------------------------
 
-### 12. Evaluasi Model
+### 12. Evaluasi Model dan Makna R²
 
 -   **Fungsi Kode:** `mean_absolute_error()`, `mean_squared_error()`,
     `r2_score()`
--   **Penjelasan:**
-    -   **MAE (Mean Absolute Error):** Rata-rata selisih absolut antara
-        harga aktual dan harga prediksi. Semakin kecil, semakin baik.
-    -   **MSE (Mean Squared Error):** Rata-rata kuadrat kesalahan
-        prediksi. Semakin kecil, semakin baik.
-    -   **RMSE (Root Mean Squared Error):** Akar dari MSE, sehingga
-        satuannya sama dengan target harga. Semakin kecil, semakin baik.
-    -   **R² Score:** Menggambarkan seberapa baik model menjelaskan
-        variasi target. Nilai yang lebih tinggi umumnya lebih baik.
-    -   Hasil evaluasi digunakan untuk membandingkan kinerja keempat
-        model.
+-   **Metrik:**
+    -   **MAE:** rata-rata selisih absolut harga aktual dan prediksi (makin kecil makin baik).
+    -   **MSE / RMSE:** kuadrat / akar kuadrat kesalahan; RMSE satuannya sama dengan harga.
+    -   **R² (koefisien determinasi):**
+
+    $$R^2 = 1 - \frac{\sum (y_i - \hat{y}_i)^2}{\sum (y_i - \bar{y})^2}$$
+
+-   **Apakah R² harus mendekati 1?**
+    -   R² = 1 berarti prediksi sempurna; R² = 0 berarti model sama saja
+        dengan selalu menebak rata-rata harga; **R² < 0 berarti lebih buruk
+        dari menebak rata-rata**.
+    -   Tidak ada batas universal. Pada data pasar yang nyata, R² tinggi
+        (mis. > 0,7) umumnya diharapkan, tetapi nilai itu hanya bermakna jika
+        dihitung pada **data uji**, bukan data latih.
+    -   R² yang mendekati 1 di data latih namun rendah di data uji adalah
+        tanda *overfitting*, bukan model bagus.
 
 ------------------------------------------------------------------------
 
@@ -202,11 +214,103 @@ penggerak.
 -   **Penjelasan:**
     -   Menampilkan sepuluh fitur yang paling berpengaruh menurut model
         Gradient Boosting Regressor.
-    -   Grafik membantu melihat fitur mana yang paling banyak digunakan
-        model dalam membuat prediksi.
     -   Feature importance menunjukkan tingkat kepentingan fitur dalam
-        model, bukan bukti bahwa fitur tersebut menyebabkan perubahan
-        harga.
+        model, bukan bukti sebab-akibat terhadap harga.
+    -   Karena performa model rendah (bagian 14), nilai importance di sini
+        sebaiknya dibaca hati-hati dan tidak dijadikan kesimpulan kuat.
+
+------------------------------------------------------------------------
+
+### 14. Pembuktian Nilai R²: Benar atau Tidak?
+
+Klaim yang diuji: *"model regresi pada dataset ini bisa mencapai R² mendekati
+1 seperti pada referensi."* Pengujian dijalankan ulang dengan kode dan split
+yang sama dengan notebook (`test_size=0.2`, `random_state=42`).
+
+**a. Hasil pada data uji (400 baris)**
+
+| Model | MAE | RMSE | R² uji | R² latih |
+|---|---:|---:|---:|---:|
+| Baseline (selalu tebak rata-rata) | 1.796.076 | 2.071.979 | -0,0005 | 0,0000 |
+| Linear Regression | 1.818.910 | 2.108.046 | -0,0357 | 0,0194 |
+| Decision Tree | 1.886.587 | 2.200.895 | -0,1289 | 0,1211 |
+| Random Forest | 1.872.102 | 2.160.576 | -0,0879 | 0,8532 |
+| Gradient Boosting | 1.840.285 | 2.134.893 | -0,0622 | 0,2169 |
+
+**b. Validasi silang 5-fold (R² rata-rata)**: Linear Regression -0,031,
+Random Forest -0,088, Gradient Boosting -0,054. Hasilnya konsisten dengan
+split tunggal, jadi bukan kebetulan pembagian data.
+
+**c. Mengapa R² rendah? Korelasi dan rata-rata harga**
+
+-   Korelasi dengan `price`: `year` = 0,061; `engine_size` = 0,005;
+    `mileage` = -0,031 (semuanya hampir nol).
+-   Rata-rata harga per kategori hampir sama: antar `brand` hanya
+    Rp 4,27 jt -- 4,41 jt; antar `fuel_type` Rp 4,22 jt -- 4,44 jt. Artinya
+    fitur hampir tidak membedakan harga.
+-   Contoh pola yang tidak masuk akal secara pasar: tiga Suzuki Swift tahun
+    2008 berharga Rp 7,68 jt, Rp 6,82 jt, dan Rp 1,25 jt. Model dan tahun
+    sama, tetapi harga berbeda sampai enam kali lipat. Ini mengindikasikan
+    dataset kemungkinan **sintetis/acak** (dugaan berdasarkan pola di atas,
+    bukan fakta dari sumber dataset).
+
+**d. Kesimpulan**
+
+-   **Klaim "R² mendekati 1" TIDAK terbukti pada dataset ini.** Semua R² uji
+    bernilai negatif, artinya tidak ada model yang lebih baik dari sekadar
+    menebak rata-rata harga.
+-   Random Forest menunjukkan *overfitting* jelas: R² latih 0,853 tetapi R²
+    uji -0,088.
+-   Secara angka, di antara empat model Linear Regression paling baik (MAE,
+    RMSE, R² paling kecil kerugiannya), tetapi **tetap tidak layak dipakai
+    memprediksi harga**. Perbedaan antar model tidak bermakna karena semuanya
+    mendekati tebakan rata-rata.
+-   R² dalam referensi yang tinggi berasal dari dataset berbeda (data pasar
+    nyata dengan hubungan fitur-harga yang kuat), sehingga tidak bisa
+    disalin ke dataset ini. R² tidak "dipaksa" mendekati 1 dengan mengubah
+    metrik; solusi yang jujur adalah mengganti/menambah data yang
+    memang berhubungan dengan harga.
+
+------------------------------------------------------------------------
+
+## Referensi (Jurnal Nasional, 2022 -- 2023)
+
+Hasil penelusuran hanya menemukan **satu** jurnal yang terverifikasi terbit
+pada rentang 2022 -- 2023 dan sesuai topik:
+
+1.  Hasibuan, E. & Karim, A. (2022). *Implementasi Machine Learning untuk
+    Prediksi Harga Mobil Bekas dengan Algoritma Regresi Linear Berbasis Web.*
+    **Jurnal Ilmiah KOMPUTASI**, 21(4), 595--602, Desember 2022.
+    DOI: 10.32409/jikstik.21.4.3327
+    https://ejournal.jak-stik.ac.id/index.php/komputasi/article/view/3327
+    -   Isi (sudah dicek langsung pada PDF): regresi linear berganda dengan
+        data Kaggle harga mobil bekas (10.668 baris, 9 kolom), pembagian
+        data 80%:20%, dan evaluasi dengan R² serta RMSE.
+    -   Hasil: **R² = 0,7622** (disebut "akurasi 76,22%") dan RMSE = 3.813,65.
+    -   Makna bagi proyek ini: pada data dengan hubungan fitur-harga yang
+        nyata, R² ≈ 0,76 sudah dianggap layak oleh penulis; jadi R² tidak
+        harus tepat 1. Nilai ini dihitung pada dataset yang berbeda,
+        sehingga tidak bisa langsung dibandingkan dengan hasil di atas.
+
+> **Status akreditasi:** menurut profil SINTA
+> (https://sinta.kemdiktisaintek.go.id/journals/profile/2162), Jurnal Ilmiah
+> KOMPUTASI saat ini berperingkat **SINTA 4**, bukan SINTA 3. Jika tugas
+> mensyaratkan SINTA 3 secara ketat, referensi ini perlu diganti dengan
+> jurnal SINTA 3 yang terbit 2022--2023.
+
+Referensi pendukung (ditemukan, tetapi **di luar rentang tahun 2022--2023**,
+jangan dipakai sebagai referensi utama sesuai syarat):
+
+-   Kriswantara, B., Kurniawati, & Pardede, H. F. (2021). *Prediksi Harga Mobil
+    Bekas dengan Machine Learning.* Syntax Literate, 6(5). (R² = 0,88 DNN;
+    0,82 Random Forest)
+-   *Evaluasi Model Machine Learning untuk Prediksi Harga Mobil dengan
+    Perbandingan Ensemble dan Regresi Linear.* JIRSI (Unity Academy).
+    (R² Gradient Boosting 0,9639; Random Forest 0,8997; Linear Regression 0,4179)
+
+Catatan: seluruh R² tinggi pada referensi dihitung pada dataset yang berbeda,
+sehingga hanya menjadi pembanding konsep, bukan target yang pasti tercapai di
+dataset ini.
 
 ------------------------------------------------------------------------
 
@@ -248,3 +352,14 @@ https://www.kaggle.com/datasets/abdulwadood11220/car-dataset-for-price-predictio
 Penjelasan ini mengikuti tahapan yang terdapat pada notebook. Hasil
 akhir model bergantung pada data dan proses yang dijalankan. Pada bagian
 pencilan, notebook hanya mendeteksi pencilan dan tidak menghapusnya.
+
+Hal yang tidak sinkron di notebook dan perlu dirapikan (README ini hanya
+mendokumentasikan, tidak mengubah notebook):
+
+-   Teks pengantar di notebook menyebut LARS, tetapi LARS tidak
+    diimplementasikan; `LogisticRegression` juga di-*import* namun tidak
+    dipakai. Kode hanya memakai empat model regresi di atas.
+-   Cell terakhir menyimpan `GradientBoostingClassifier` sebagai
+    `best_model`, padahal target `price` adalah regresi. Sebaiknya yang
+    disimpan `GBR` (atau model terpilih), dan `import joblib, pickle` perlu
+    ditambahkan di cell tersebut.
